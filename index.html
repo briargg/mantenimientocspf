@@ -1,0 +1,1669 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CSPFA · Mantenimiento</title>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg: #f6f8fa;
+            --card: #ffffff;
+            --border: #e5e9f0;
+            --text: #1a1a2e;
+            --text-secondary: #6b7280;
+            --text-light: #9ca3af;
+            --primary: #1a1a2e;
+            --primary-hover: #2d2d44;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --success: #16a34a;
+            --success-bg: #f0fdf4;
+            --warning: #d97706;
+            --warning-bg: #fffbeb;
+            --danger: #dc2626;
+            --danger-bg: #fef2f2;
+            --radius: 12px;
+            --radius-sm: 8px;
+            --shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.03);
+            --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.06);
+            --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+
+        body {
+            font-family: var(--font);
+            background: var(--bg);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 16px;
+            color: var(--text);
+        }
+
+        #app {
+            width: 100%;
+            max-width: 420px;
+            background: var(--card);
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            min-height: 700px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        /* ===== LOADING ===== */
+        #loading {
+            padding: 60px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 700px;
+            gap: 16px;
+        }
+        #loading .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        #loading .title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        #loading .sub {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+            background: var(--card);
+        }
+        .header .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .header .brand .mark {
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 13px;
+        }
+        .header .brand .name {
+            font-size: 15px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        .header .brand .name span {
+            color: var(--text-secondary);
+            font-weight: 400;
+        }
+
+        .header .actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-staff {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            padding: 5px 14px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: 0.15s;
+            font-family: inherit;
+        }
+        .btn-staff:hover {
+            background: var(--bg);
+            border-color: #d1d5db;
+        }
+        .btn-staff.active {
+            background: var(--primary);
+            color: #fff;
+            border-color: var(--primary);
+        }
+        .btn-staff.active:hover {
+            background: var(--primary-hover);
+        }
+
+        .user-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 3px 12px 3px 3px;
+            background: var(--bg);
+            border-radius: 30px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        .user-badge .avatar {
+            width: 26px;
+            height: 26px;
+            background: var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .user-badge .role {
+            font-size: 9px;
+            text-transform: uppercase;
+            color: var(--text-light);
+            letter-spacing: 0.3px;
+        }
+        .btn-logout {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 15px;
+            padding: 0 4px;
+            transition: 0.15s;
+        }
+        .btn-logout:hover {
+            color: var(--danger);
+        }
+
+        /* ===== CONTENT ===== */
+        .content {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: var(--bg);
+        }
+
+        .page {
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .page.active {
+            display: flex;
+        }
+
+        /* ===== CARDS ===== */
+        .card {
+            background: var(--card);
+            border-radius: var(--radius);
+            padding: 20px;
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+        }
+        .card-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .card-title .tag {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            background: var(--bg);
+            padding: 2px 10px;
+            border-radius: 20px;
+            margin-left: auto;
+        }
+
+        /* ===== FORM ===== */
+        .field {
+            margin-bottom: 14px;
+        }
+        .field:last-child {
+            margin-bottom: 0;
+        }
+        .field label {
+            display: block;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .field label .req {
+            color: var(--danger);
+        }
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-family: inherit;
+            background: #fff;
+            color: var(--text);
+            transition: 0.15s;
+            outline: none;
+        }
+        .field input:focus,
+        .field select:focus,
+        .field textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.06);
+        }
+        .field input::placeholder,
+        .field textarea::placeholder {
+            color: var(--text-light);
+        }
+        .field textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        .field select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%236b7280'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 32px;
+            cursor: pointer;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 11px 20px;
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-weight: 600;
+            font-family: inherit;
+            cursor: pointer;
+            transition: 0.15s;
+            width: 100%;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: #fff;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-hover);
+        }
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .btn-success {
+            background: var(--success);
+            color: #fff;
+        }
+        .btn-success:hover:not(:disabled) {
+            background: #15803d;
+        }
+        .btn-warning {
+            background: var(--warning);
+            color: #fff;
+        }
+        .btn-warning:hover:not(:disabled) {
+            background: #b45309;
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: #fff;
+        }
+        .btn-danger:hover:not(:disabled) {
+            background: #b91c1c;
+        }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+        .btn-secondary:hover {
+            background: var(--bg);
+        }
+
+        .btn-sm {
+            padding: 5px 12px;
+            font-size: 11px;
+            width: auto;
+            border-radius: 6px;
+        }
+
+        /* ===== TICKETS ===== */
+        .ticket {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            transition: 0.15s;
+            margin-bottom: 10px;
+        }
+        .ticket:last-child {
+            margin-bottom: 0;
+        }
+        .ticket:hover {
+            border-color: #d1d5db;
+        }
+        .ticket .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 3px;
+        }
+        .ticket .id {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        .ticket .status {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .ticket .status.pendiente_aprobacion {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .ticket .status.pendiente {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+        .ticket .status.enprogreso {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+        .ticket .status.completado {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+        .ticket .title {
+            font-size: 14px;
+            font-weight: 500;
+            margin: 3px 0;
+        }
+        .ticket .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .ticket .meta span {
+            font-size: 11px;
+            color: var(--text-secondary);
+            background: var(--bg);
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+        .ticket .meta .alta {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+        .ticket .meta .media {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+        .ticket .meta .baja {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+        .ticket .actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .ticket .actions button {
+            padding: 4px 12px;
+            font-size: 11px;
+            font-weight: 500;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.15s;
+        }
+        .ticket .actions .view {
+            background: var(--bg);
+            color: var(--text-secondary);
+        }
+        .ticket .actions .view:hover {
+            background: #e5e9f0;
+        }
+        .ticket .actions .approve {
+            background: #dbeafe;
+            color: var(--accent);
+        }
+        .ticket .actions .approve:hover {
+            background: #bfdbfe;
+        }
+        .ticket .actions .assign {
+            background: #eff6ff;
+            color: var(--accent);
+        }
+        .ticket .actions .assign:hover {
+            background: #dbeafe;
+        }
+        .ticket .actions .reply {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+        .ticket .actions .reply:hover {
+            background: #fef3c7;
+        }
+        .ticket .actions .done {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+        .ticket .actions .done:hover {
+            background: #dcfce7;
+        }
+        .ticket .reply-box {
+            margin-top: 8px;
+            padding: 10px;
+            background: var(--bg);
+            border-radius: 6px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        .ticket .reply-box strong {
+            color: var(--text);
+        }
+        .ticket .assigned {
+            font-size: 11px;
+            color: var(--text-light);
+            margin-top: 4px;
+        }
+
+        /* ===== STATS ===== */
+        .stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+        }
+        .stats .item {
+            text-align: center;
+            padding: 10px 6px;
+            background: var(--bg);
+            border-radius: var(--radius-sm);
+        }
+        .stats .item .num {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+        }
+        .stats .item .num.danger {
+            color: var(--danger);
+        }
+        .stats .item .num.warning {
+            color: var(--warning);
+        }
+        .stats .item .num.success {
+            color: var(--success);
+        }
+        .stats .item .lbl {
+            font-size: 9px;
+            font-weight: 500;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            margin-top: 2px;
+        }
+
+        /* ===== FILTERS ===== */
+        .filters {
+            display: flex;
+            gap: 4px;
+            background: var(--bg);
+            padding: 4px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .filters button {
+            flex: 1;
+            padding: 5px 8px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: 0.15s;
+            font-family: inherit;
+            min-width: 60px;
+        }
+        .filters button.active {
+            background: #fff;
+            color: var(--text);
+            box-shadow: var(--shadow);
+        }
+        .filters button:hover:not(.active) {
+            color: var(--text);
+        }
+
+        /* ===== EMPTY ===== */
+        .empty {
+            text-align: center;
+            padding: 30px 16px;
+            color: var(--text-secondary);
+        }
+        .empty .icon {
+            font-size: 28px;
+            opacity: 0.4;
+            margin-bottom: 6px;
+        }
+        .empty .title {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+        }
+        .empty .sub {
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--primary);
+            color: #fff;
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            box-shadow: var(--shadow-lg);
+            display: none;
+            z-index: 999;
+            max-width: 90%;
+            text-align: center;
+        }
+        .toast.show {
+            display: block;
+            animation: fadeUp 0.25s ease;
+        }
+        .toast.success {
+            background: var(--success);
+        }
+        .toast.error {
+            background: var(--danger);
+        }
+        .toast.warning {
+            background: var(--warning);
+            color: #fff;
+        }
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+
+        /* ===== AUTH MODAL ===== */
+        #authModal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        #authModal.active {
+            display: flex;
+        }
+        #authModal .box {
+            background: #fff;
+            border-radius: var(--radius-lg);
+            padding: 32px 24px;
+            max-width: 360px;
+            width: 100%;
+            box-shadow: var(--shadow-lg);
+            animation: modalIn 0.2s ease;
+            position: relative;
+        }
+        @keyframes modalIn {
+            from {
+                opacity: 0;
+                transform: scale(0.96) translateY(12px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        #authModal .box .close {
+            position: absolute;
+            top: 14px;
+            right: 18px;
+            background: none;
+            border: none;
+            color: var(--text-light);
+            font-size: 18px;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        #authModal .box .close:hover {
+            color: var(--text);
+        }
+        #authModal .box .title {
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: -0.3px;
+            margin-bottom: 4px;
+        }
+        #authModal .box .sub {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        #authModal .box .form {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        #authModal .box .form input,
+        #authModal .box .form select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            font-size: 14px;
+            font-family: inherit;
+            outline: none;
+            transition: 0.15s;
+        }
+        #authModal .box .form input:focus,
+        #authModal .box .form select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.06);
+        }
+        #authModal .box .form .error {
+            color: var(--danger);
+            font-size: 12px;
+            text-align: center;
+            min-height: 18px;
+        }
+        #authModal .box .form .toggle {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 12px;
+            cursor: pointer;
+            text-align: center;
+            padding: 4px;
+            font-family: inherit;
+            transition: 0.15s;
+        }
+        #authModal .box .form .toggle:hover {
+            color: var(--text);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 420px) {
+            body {
+                padding: 0;
+            }
+            #app {
+                border-radius: 0;
+                min-height: 100vh;
+            }
+            .content {
+                padding: 16px;
+            }
+            .stats {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+            .row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+        .mt-8 {
+            margin-top: 8px;
+        }
+        .mb-8 {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+
+        <!-- LOADING -->
+        <div id="loading">
+            <div class="spinner"></div>
+            <div class="title">CSPFA</div>
+            <div class="sub">Sistema de mantenimiento</div>
+        </div>
+
+        <!-- AUTH MODAL -->
+        <div id="authModal">
+            <div class="box">
+                <button class="close" onclick="closeAuth()">✕</button>
+                <div class="title">Acceso personal</div>
+                <div class="sub">Ingresá con tus credenciales</div>
+
+                <div class="form" id="loginForm">
+                    <div class="error" id="authError"></div>
+                    <input type="email" id="loginEmail" placeholder="Email" />
+                    <input type="password" id="loginPassword" placeholder="Contraseña" />
+                    <button class="btn btn-primary" onclick="handleLogin()">Iniciar sesión</button>
+                    <button class="toggle" onclick="showRegister()">Crear cuenta nueva</button>
+                </div>
+
+                <div class="form hidden" id="registerForm">
+                    <div class="error" id="regError"></div>
+                    <input type="text" id="regName" placeholder="Nombre completo" />
+                    <input type="email" id="regEmail" placeholder="Email" />
+                    <input type="password" id="regPassword" placeholder="Contraseña (mínimo 6 caracteres)" />
+                    <select id="regRole">
+                        <option value="encargado_general">Encargado General</option>
+                        <option value="tecnico">Técnico</option>
+                        <option value="mucama">Mucama</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="handleRegister()">Registrarse</button>
+                    <button class="toggle" onclick="showLogin()">Ya tengo cuenta</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- APP -->
+        <div id="appContainer">
+
+            <!-- HEADER -->
+            <div class="header">
+                <div class="brand">
+                    <div class="mark">C</div>
+                    <div class="name">CSPFA <span>Mantenimiento</span></div>
+                </div>
+                <div class="actions">
+                    <div id="userInfo" class="user-badge" style="display:none;">
+                        <div class="avatar" id="userAvatar">U</div>
+                        <span id="userName">Usuario</span>
+                        <span class="role" id="userRole">Encargado</span>
+                        <button class="btn-logout" onclick="handleLogout()">✕</button>
+                    </div>
+                    <button class="btn-staff" id="btnStaff" onclick="openAuth()">Personal</button>
+                </div>
+            </div>
+
+            <!-- CONTENT -->
+            <div class="content">
+
+                <!-- PAGE: HOME (Administrativos - Crear preticket) -->
+                <div class="page active" id="pageHome">
+                    <div class="card">
+                        <div class="card-title">
+                            Nuevo reporte
+                            <span class="tag">Preticket</span>
+                        </div>
+
+                        <div class="field">
+                            <label>Nombre completo <span class="req">*</span></label>
+                            <input type="text" id="ticketNombre" placeholder="Juan Pérez" />
+                        </div>
+
+                        <div class="row">
+                            <div class="field">
+                                <label>Legajo <span class="req">*</span></label>
+                                <input type="text" id="ticketLegajo" placeholder="12345" />
+                            </div>
+                            <div class="field">
+                                <label>Edificio <span class="req">*</span></label>
+                                <select id="ticketBuilding">
+                                    <option value="Hotel Alberti">Hotel Alberti</option>
+                                    <option value="Hotel 7 de Marzo">Hotel 7 de Marzo</option>
+                                    <option value="Sede">Sede</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Ubicación <span class="req">*</span></label>
+                            <input type="text" id="ticketUbicacion" placeholder="Oficina 301, Recepción, Hab 201" />
+                        </div>
+
+                        <div class="row">
+                            <div class="field">
+                                <label>Tipo <span class="req">*</span></label>
+                                <select id="ticketTipo">
+                                    <option value="limpieza">Limpieza</option>
+                                    <option value="mantenimiento">Mantenimiento</option>
+                                    <option value="electricidad">Electricidad</option>
+                                    <option value="plomeria">Plomería</option>
+                                    <option value="otros">Otros</option>
+                                </select>
+                            </div>
+                            <div class="field">
+                                <label>Urgencia <span class="req">*</span></label>
+                                <select id="ticketUrgencia">
+                                    <option value="urgente">Alta</option>
+                                    <option value="media">Media</option>
+                                    <option value="baja">Baja</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="field">
+                            <label>Descripción <span class="req">*</span></label>
+                            <textarea id="ticketDescripcion" placeholder="Describí el problema..."></textarea>
+                        </div>
+
+                        <button class="btn btn-primary" id="btnEnviarTicket" onclick="enviarPreticket()">
+                            Enviar reporte
+                        </button>
+                        <div style="font-size:11px;color:var(--text-light);text-align:center;margin-top:8px;">
+                            ⏳ Tu reporte será revisado por el encargado
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">
+                            Mis reportes
+                            <span class="tag" id="misCount">0</span>
+                        </div>
+                        <div id="misContainer">
+                            <div class="empty">
+                                <div class="icon">📋</div>
+                                <div class="title">No tenés reportes</div>
+                                <div class="sub">Completá el formulario para generar tu primer reporte</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- PAGE: STAFF (Encargado General) -->
+                <div class="page" id="pageStaff">
+                    <div class="card">
+                        <div class="card-title">Panel de gestión</div>
+                        <div class="stats">
+                            <div class="item">
+                                <div class="num warning" id="sPretickets">0</div>
+                                <div class="lbl">Pretickets</div>
+                            </div>
+                            <div class="item">
+                                <div class="num danger" id="sPendientes">0</div>
+                                <div class="lbl">Pendientes</div>
+                            </div>
+                            <div class="item">
+                                <div class="num success" id="sCompletados">0</div>
+                                <div class="lbl">Completados</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">Todos los tickets</div>
+                        <div class="filters">
+                            <button class="active" onclick="filterTickets('all', this)">Todos</button>
+                            <button onclick="filterTickets('pendiente_aprobacion', this)">Pretickets</button>
+                            <button onclick="filterTickets('pendiente', this)">Pendientes</button>
+                            <button onclick="filterTickets('enprogreso', this)">En curso</button>
+                            <button onclick="filterTickets('completado', this)">Completados</button>
+                        </div>
+                        <div id="staffContainer">
+                            <div class="empty">
+                                <div class="icon">📭</div>
+                                <div class="title">Cargando tickets...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-secondary" onclick="goHome()">← Volver al inicio</button>
+                </div>
+
+                <!-- PAGE: TRABAJADOR (Técnico / Mucama) -->
+                <div class="page" id="pageTrabajador">
+                    <div class="card">
+                        <div class="card-title">
+                            Mis tickets asignados
+                            <span class="tag" id="trabajadorCount">0</span>
+                        </div>
+                        <div id="trabajadorContainer">
+                            <div class="empty">
+                                <div class="icon">📭</div>
+                                <div class="title">No tenés tickets asignados</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-secondary" onclick="goHome()">← Volver al inicio</button>
+                </div>
+
+                <!-- PAGE: DETAIL -->
+                <div class="page" id="pageDetail">
+                    <button class="btn btn-secondary btn-sm" onclick="goBack()" style="width:auto;">← Volver</button>
+                    <div class="card">
+                        <div class="card-title" id="detailTitle">Detalle del ticket</div>
+                        <div id="detailContent"></div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // ============================================================
+        // FIREBASE
+        // ============================================================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDppo3qRjU8vYKrXcL2Gg1T5xnBKChTd98",
+            authDomain: "optimum-courier-263317.firebaseapp.com",
+            databaseURL: "https://optimum-courier-263317.firebaseio.com",
+            projectId: "optimum-courier-263317",
+            storageBucket: "optimum-courier-263317.firebasestorage.app",
+            messagingSenderId: "913169000664",
+            appId: "1:913169000664:web:9c1b2bd73245e4c2fb8fad",
+            measurementId: "G-VQWZCM8VP8"
+        };
+
+        let auth, db;
+        let currentUser = null;
+        let currentRole = null;
+        let allTickets = [];
+        let unsub = null;
+        let filter = 'all';
+        let isAuth = false;
+        let viewMode = 'home'; // home | staff | trabajador
+
+        try {
+            const app = firebase.initializeApp(firebaseConfig);
+            auth = firebase.auth(app);
+            db = firebase.firestore(app);
+            console.log('✅ Firebase OK');
+        } catch (e) {
+            document.querySelector('#loading .sub').textContent = '⚠️ Error de conexión';
+        }
+
+        // ============================================================
+        // TOAST
+        // ============================================================
+        function toast(msg, type = 'info', duration = 3000) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.className = 'toast show ' + type;
+            clearTimeout(el._t);
+            el._t = setTimeout(() => el.classList.remove('show'), duration);
+        }
+
+        function esc(s) {
+            return String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;',
+                "'": '&#39;' }[c]));
+        }
+
+        // ============================================================
+        // AUTH
+        // ============================================================
+        function openAuth() {
+            document.getElementById('authModal').classList.add('active');
+        }
+
+        function closeAuth() {
+            document.getElementById('authModal').classList.remove('active');
+        }
+
+        function showRegister() {
+            document.getElementById('loginForm').classList.add('hidden');
+            document.getElementById('registerForm').classList.remove('hidden');
+            document.getElementById('authError').textContent = '';
+            document.getElementById('regError').innerHTML = '';
+        }
+
+        function showLogin() {
+            document.getElementById('registerForm').classList.add('hidden');
+            document.getElementById('loginForm').classList.remove('hidden');
+            document.getElementById('regError').innerHTML = '';
+            document.getElementById('authError').textContent = '';
+        }
+
+        async function handleRegister() {
+            const name = document.getElementById('regName').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const role = document.getElementById('regRole').value;
+
+            if (!name || !email || !password) {
+                document.getElementById('regError').textContent = 'Completá todos los campos';
+                return;
+            }
+            if (password.length < 6) {
+                document.getElementById('regError').textContent = 'La contraseña debe tener al menos 6 caracteres';
+                return;
+            }
+
+            document.getElementById('regError').textContent = '⏳';
+
+            try {
+                const cred = await auth.createUserWithEmailAndPassword(email, password);
+                await db.collection('usuarios').doc(cred.user.uid).set({
+                    uid: cred.user.uid,
+                    name: name,
+                    email: email,
+                    role: role,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                document.getElementById('regError').textContent = '';
+                toast('✅ Registro exitoso', 'success');
+                closeAuth();
+            } catch (e) {
+                document.getElementById('regError').textContent = e.message;
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            if (!email || !password) {
+                document.getElementById('authError').textContent = 'Ingresá email y contraseña';
+                return;
+            }
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                document.getElementById('authError').textContent = '';
+                closeAuth();
+            } catch (e) {
+                document.getElementById('authError').textContent = e.message;
+            }
+        }
+
+        function handleLogout() {
+            if (unsub) { unsub();
+                unsub = null; }
+            auth.signOut();
+            isAuth = false;
+            currentUser = null;
+            currentRole = null;
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('btnStaff').style.display = 'block';
+            document.getElementById('btnStaff').classList.remove('active');
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('pageHome').classList.add('active');
+            viewMode = 'home';
+            toast('Sesión cerrada');
+            loadHomeTickets();
+        }
+
+        // ============================================================
+        // AUTH STATE
+        // ============================================================
+        auth?.onAuthStateChanged(async (user) => {
+            document.getElementById('loading').style.display = 'none';
+
+            if (user) {
+                isAuth = true;
+                try {
+                    const doc = await db.collection('usuarios').doc(user.uid).get();
+                    if (doc.exists) {
+                        currentUser = { uid: user.uid, ...doc.data() };
+                        currentRole = currentUser.role;
+
+                        document.getElementById('userInfo').style.display = 'flex';
+                        document.getElementById('btnStaff').style.display = 'none';
+                        document.getElementById('btnStaff').classList.add('active');
+                        document.getElementById('userName').textContent = currentUser.name || 'Usuario';
+                        document.getElementById('userAvatar').textContent = (currentUser.name || 'U')[0];
+
+                        const roles = {
+                            encargado_general: 'Encargado',
+                            tecnico: 'Técnico',
+                            mucama: 'Mucama'
+                        };
+                        document.getElementById('userRole').textContent = roles[currentRole] || 'Personal';
+
+                        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+
+                        // Mostrar página según rol
+                        if (currentRole === 'encargado_general') {
+                            document.getElementById('pageStaff').classList.add('active');
+                            viewMode = 'staff';
+                        } else if (currentRole === 'tecnico' || currentRole === 'mucama') {
+                            document.getElementById('pageTrabajador').classList.add('active');
+                            viewMode = 'trabajador';
+                        }
+
+                        if (unsub) { unsub();
+                            unsub = null; }
+                        unsub = db.collection('tickets')
+                            .orderBy('createdAt', 'desc')
+                            .onSnapshot(snap => {
+                                allTickets = [];
+                                snap.forEach(d => allTickets.push({ id: d.id, ...d.data() }));
+                                if (currentRole === 'encargado_general') {
+                                    renderStaff();
+                                } else if (currentRole === 'tecnico' || currentRole === 'mucama') {
+                                    renderTrabajador();
+                                }
+                            });
+
+                    } else {
+                        toast('Usuario no registrado en el sistema', 'error');
+                        auth.signOut();
+                    }
+                } catch (e) {
+                    toast('Error al cargar datos', 'error');
+                }
+            } else {
+                isAuth = false;
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('btnStaff').style.display = 'block';
+                document.getElementById('btnStaff').classList.remove('active');
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById('pageHome').classList.add('active');
+                viewMode = 'home';
+                loadHomeTickets();
+            }
+        });
+
+        // ============================================================
+        // HOME - PRETICKETS
+        // ============================================================
+        function loadHomeTickets() {
+            if (unsub) { unsub();
+                unsub = null; }
+            unsub = db.collection('tickets')
+                .orderBy('createdAt', 'desc')
+                .onSnapshot(snap => {
+                    allTickets = [];
+                    snap.forEach(d => allTickets.push({ id: d.id, ...d.data() }));
+                    if (!isAuth) renderMisTickets();
+                });
+        }
+
+        // ============================================================
+        // ENVIAR PRETICKET
+        // ============================================================
+        async function enviarPreticket() {
+            const nombre = document.getElementById('ticketNombre').value.trim();
+            const legajo = document.getElementById('ticketLegajo').value.trim();
+            const building = document.getElementById('ticketBuilding').value;
+            const ubicacion = document.getElementById('ticketUbicacion').value.trim();
+            const tipo = document.getElementById('ticketTipo').value;
+            const urgencia = document.getElementById('ticketUrgencia').value;
+            const descripcion = document.getElementById('ticketDescripcion').value.trim();
+
+            if (!nombre || !legajo || !ubicacion || !descripcion) {
+                toast('Completá todos los campos obligatorios', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnEnviarTicket');
+            btn.disabled = true;
+            btn.textContent = '⏳';
+
+            try {
+                await db.collection('tickets').add({
+                    nombre: nombre,
+                    legajo: legajo,
+                    building: building,
+                    ubicacion: ubicacion,
+                    tipo: tipo,
+                    urgencia: urgencia,
+                    descripcion: descripcion,
+                    estado: 'pendiente_aprobacion',
+                    creadoPor: nombre,
+                    legajoCreador: legajo,
+                    asignado: '',
+                    asignadoUid: '',
+                    respuesta: '',
+                    aprobadoPor: '',
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                document.getElementById('ticketNombre').value = '';
+                document.getElementById('ticketLegajo').value = '';
+                document.getElementById('ticketUbicacion').value = '';
+                document.getElementById('ticketDescripcion').value = '';
+
+                toast('✅ Preticket enviado. Esperá la aprobación del encargado.', 'success');
+                renderMisTickets();
+
+            } catch (e) {
+                toast('Error: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Enviar reporte';
+            }
+        }
+
+        // ============================================================
+        // MIS PRETICKETS
+        // ============================================================
+        function renderMisTickets() {
+            const nombre = document.getElementById('ticketNombre').value.trim();
+            const legajo = document.getElementById('ticketLegajo').value.trim();
+
+            let tickets = allTickets;
+            if (nombre && legajo) {
+                tickets = tickets.filter(t => t.nombre === nombre && t.legajo === legajo);
+            } else {
+                tickets = tickets.slice(0, 10);
+            }
+
+            const container = document.getElementById('misContainer');
+            document.getElementById('misCount').textContent = tickets.length;
+
+            if (tickets.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        <div class="icon">📋</div>
+                        <div class="title">No tenés reportes</div>
+                        <div class="sub">Completá el formulario para generar tu primer reporte</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const estados = {
+                pendiente_aprobacion: '⏳ Esperando aprobación',
+                pendiente: 'Pendiente',
+                enprogreso: 'En curso',
+                completado: 'Completado'
+            };
+            const urgencias = { urgente: 'Alta', media: 'Media', baja: 'Baja' };
+            const tipos = { limpieza: 'Limpieza', mantenimiento: 'Mantenimiento', electricidad: 'Electricidad',
+                plomeria: 'Plomería', otros: 'Otros' };
+
+            container.innerHTML = tickets.map(t => `
+                <div class="ticket">
+                    <div class="head">
+                        <span class="id">#${esc(t.id.slice(0,8))}</span>
+                        <span class="status ${t.estado}">${estados[t.estado] || t.estado}</span>
+                    </div>
+                    <div class="title">${esc(t.descripcion)}</div>
+                    <div class="meta">
+                        <span>${esc(t.ubicacion)}</span>
+                        <span>${tipos[t.tipo] || t.tipo}</span>
+                        <span class="${t.urgencia}">${urgencias[t.urgencia] || t.urgencia}</span>
+                        <span>${esc(t.building)}</span>
+                    </div>
+                    ${t.respuesta ? `<div class="reply-box"><strong>Respuesta:</strong> ${esc(t.respuesta)}</div>` : ''}
+                    ${t.asignado ? `<div class="assigned">Asignado a: ${esc(t.asignado)}</div>` : ''}
+                    ${t.aprobadoPor ? `<div class="assigned">Aprobado por: ${esc(t.aprobadoPor)}</div>` : ''}
+                </div>
+            `).join('');
+        }
+
+        document.getElementById('ticketNombre')?.addEventListener('input', renderMisTickets);
+        document.getElementById('ticketLegajo')?.addEventListener('input', renderMisTickets);
+
+        // ============================================================
+        // STAFF (ENCARGADO GENERAL)
+        // ============================================================
+        function filterTickets(f, btn) {
+            filter = f;
+            document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            renderStaff();
+        }
+
+        function renderStaff() {
+            const container = document.getElementById('staffContainer');
+            let tickets = allTickets;
+
+            if (filter !== 'all') {
+                tickets = tickets.filter(t => t.estado === filter);
+            }
+
+            const pretickets = allTickets.filter(t => t.estado === 'pendiente_aprobacion').length;
+            const pendientes = allTickets.filter(t => t.estado === 'pendiente').length;
+            const completados = allTickets.filter(t => t.estado === 'completado').length;
+            document.getElementById('sPretickets').textContent = pretickets;
+            document.getElementById('sPendientes').textContent = pendientes;
+            document.getElementById('sCompletados').textContent = completados;
+
+            if (tickets.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        <div class="icon">📭</div>
+                        <div class="title">No hay tickets</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const estados = {
+                pendiente_aprobacion: '⏳ Preticket',
+                pendiente: 'Pendiente',
+                enprogreso: 'En curso',
+                completado: 'Completado'
+            };
+            const urgencias = { urgente: 'Alta', media: 'Media', baja: 'Baja' };
+            const tipos = { limpieza: 'Limpieza', mantenimiento: 'Mantenimiento', electricidad: 'Electricidad',
+                plomeria: 'Plomería', otros: 'Otros' };
+
+            container.innerHTML = tickets.map(t => `
+                <div class="ticket">
+                    <div class="head">
+                        <span class="id">#${esc(t.id.slice(0,8))}</span>
+                        <span class="status ${t.estado}">${estados[t.estado] || t.estado}</span>
+                    </div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:2px;">
+                        ${esc(t.nombre)} · Legajo ${esc(t.legajo)}
+                    </div>
+                    <div class="title">${esc(t.descripcion)}</div>
+                    <div class="meta">
+                        <span>${esc(t.ubicacion)}</span>
+                        <span>${tipos[t.tipo] || t.tipo}</span>
+                        <span class="${t.urgencia}">${urgencias[t.urgencia] || t.urgencia}</span>
+                        <span>${esc(t.building)}</span>
+                    </div>
+                    ${t.respuesta ? `<div class="reply-box"><strong>Respuesta:</strong> ${esc(t.respuesta)}</div>` : ''}
+                    ${t.asignado ? `<div class="assigned">Asignado a: ${esc(t.asignado)}</div>` : ''}
+                    <div class="actions">
+                        <button class="view" onclick="viewDetail('${t.id}', 'staff')">Ver</button>
+                        ${t.estado === 'pendiente_aprobacion' ? `
+                            <button class="approve" onclick="aprobarPreticket('${t.id}')">✅ Aprobar</button>
+                        ` : ''}
+                        ${t.estado !== 'pendiente_aprobacion' && t.estado !== 'completado' ? `
+                            <button class="assign" onclick="assignTicket('${t.id}')">Asignar</button>
+                            <button class="reply" onclick="replyTicket('${t.id}')">Responder</button>
+                            <button class="done" onclick="doneTicket('${t.id}')">Completar</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================================
+        // TRABAJADOR (Técnico / Mucama)
+        // ============================================================
+        function renderTrabajador() {
+            const container = document.getElementById('trabajadorContainer');
+
+            // Filtrar tickets asignados a este usuario
+            const misTickets = allTickets.filter(t =>
+                t.asignado === currentUser.name ||
+                t.asignadoUid === currentUser.uid
+            );
+
+            document.getElementById('trabajadorCount').textContent = misTickets.length;
+
+            if (misTickets.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        <div class="icon">📭</div>
+                        <div class="title">No tenés tickets asignados</div>
+                        <div class="sub">Esperá a que el encargado te asigne un ticket</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const estados = {
+                pendiente: 'Pendiente',
+                enprogreso: 'En curso',
+                completado: 'Completado'
+            };
+            const urgencias = { urgente: 'Alta', media: 'Media', baja: 'Baja' };
+            const tipos = { limpieza: 'Limpieza', mantenimiento: 'Mantenimiento', electricidad: 'Electricidad',
+                plomeria: 'Plomería', otros: 'Otros' };
+
+            container.innerHTML = misTickets.map(t => `
+                <div class="ticket">
+                    <div class="head">
+                        <span class="id">#${esc(t.id.slice(0,8))}</span>
+                        <span class="status ${t.estado}">${estados[t.estado] || t.estado}</span>
+                    </div>
+                    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:2px;">
+                        ${esc(t.nombre)} · Legajo ${esc(t.legajo)}
+                    </div>
+                    <div class="title">${esc(t.descripcion)}</div>
+                    <div class="meta">
+                        <span>${esc(t.ubicacion)}</span>
+                        <span>${tipos[t.tipo] || t.tipo}</span>
+                        <span class="${t.urgencia}">${urgencias[t.urgencia] || t.urgencia}</span>
+                        <span>${esc(t.building)}</span>
+                    </div>
+                    ${t.respuesta ? `<div class="reply-box"><strong>Respuesta:</strong> ${esc(t.respuesta)}</div>` : ''}
+                    <div class="actions">
+                        <button class="view" onclick="viewDetail('${t.id}', 'trabajador')">Ver</button>
+                        ${t.estado !== 'completado' ? `
+                            ${t.estado === 'pendiente' ? `
+                                <button class="assign" onclick="iniciarTicket('${t.id}')">🔄 Iniciar</button>
+                            ` : ''}
+                            <button class="done" onclick="completarTicketTrabajador('${t.id}')">✅ Completar</button>
+                        ` : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ============================================================
+        // ACCIONES ENCARGADO
+        // ============================================================
+        async function aprobarPreticket(id) {
+            if (!confirm('¿Aprobar este preticket y convertirlo en ticket?')) return;
+            try {
+                await db.collection('tickets').doc(id).update({
+                    estado: 'pendiente',
+                    aprobadoPor: currentUser.name,
+                    aprobadoPorUid: currentUser.uid
+                });
+                toast('✅ Preticket aprobado y convertido en ticket', 'success');
+            } catch (e) {
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function assignTicket(id) {
+            // Obtener lista de técnicos y mucamas
+            const usuariosSnapshot = await db.collection('usuarios').where('role', 'in', ['tecnico', 'mucama']).get();
+            const usuarios = [];
+            usuariosSnapshot.forEach(d => usuarios.push({ id: d.id, ...d.data() }));
+
+            if (usuarios.length === 0) {
+                toast('No hay técnicos o mucamas registrados', 'warning');
+                return;
+            }
+
+            const userList = usuarios.map((u, i) => `${i + 1}. ${u.name} (${u.role})`).join('\n');
+            const seleccion = prompt(`¿A quién asignás este ticket?\n\n${userList}\n\nEscribí el número:`);
+
+            if (!seleccion) return;
+            const idx = parseInt(seleccion) - 1;
+            if (idx < 0 || idx >= usuarios.length) {
+                toast('Selección inválida', 'error');
+                return;
+            }
+
+            const asignado = usuarios[idx];
+            try {
+                await db.collection('tickets').doc(id).update({
+                    asignado: asignado.name,
+                    asignadoUid: asignado.uid,
+                    estado: 'pendiente'
+                });
+                toast(`✅ Ticket asignado a ${asignado.name}`, 'success');
+            } catch (e) {
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function replyTicket(id) {
+            const msg = prompt('Escribí tu respuesta:');
+            if (!msg) return;
+            try {
+                await db.collection('tickets').doc(id).update({ respuesta: msg });
+                toast('✅ Respuesta enviada', 'success');
+            } catch (e) {
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function doneTicket(id) {
+            if (!confirm('¿Marcar este ticket como completado?')) return;
+            try {
+                await db.collection('tickets').doc(id).update({ estado: 'completado' });
+                toast('✅ Ticket completado', 'success');
+            } catch (e) {
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        // ============================================================
+        // ACCIONES TRABAJADOR
+        // ============================================================
+        async function iniciarTicket(id) {
+            try {
+                await db.collection('tickets').doc(id).update({ estado: 'enprogreso' });
+                toast('🔄 Ticket en progreso', 'success');
+            } catch (e) {
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        async function completarTicketTrabajador(id) {
+            if (!confirm('¿Completar este ticket?')) return;
+            try {
+                await db.collection('tickets').doc(id).update({
+                    estado: 'completado',
+                    completadoPor: currentUser.name,
+                    completadoPorUid: currentUser.uid
+                });
+                toast('✅ Ticket completado', 'success');
+            } catch (e) {
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        // ============================================================
+        // DETALLE
+        // ============================================================
+        function viewDetail(id, from) {
+            const t = allTickets.find(x => x.id === id);
+            if (!t) return;
+
+            const estados = {
+                pendiente_aprobacion: '⏳ Preticket (esperando aprobación)',
+                pendiente: 'Pendiente',
+                enprogreso: 'En curso',
+                completado: 'Completado'
+            };
+            const urgencias = { urgente: 'Alta', media: 'Media', baja: 'Baja' };
+            const tipos = { limpieza: 'Limpieza', mantenimiento: 'Mantenimiento', electricidad: 'Electricidad',
+                plomeria: 'Plomería', otros: 'Otros' };
+
+            document.getElementById('detailTitle').textContent = `#${t.id.slice(0,8)} · ${t.nombre}`;
+            document.getElementById('detailContent').innerHTML = `
+                <div style="display:grid;gap:10px;font-size:14px;">
+                    <div><strong>Nombre:</strong> ${esc(t.nombre)}</div>
+                    <div><strong>Legajo:</strong> ${esc(t.legajo)}</div>
+                    <div><strong>Edificio:</strong> ${esc(t.building)}</div>
+                    <div><strong>Ubicación:</strong> ${esc(t.ubicacion)}</div>
+                    <div><strong>Tipo:</strong> ${tipos[t.tipo] || t.tipo}</div>
+                    <div><strong>Urgencia:</strong> ${urgencias[t.urgencia] || t.urgencia}</div>
+                    <div><strong>Estado:</strong> ${estados[t.estado] || t.estado}</div>
+                    <div><strong>Descripción:</strong> ${esc(t.descripcion)}</div>
+                    ${t.respuesta ? `<div><strong>Respuesta:</strong> ${esc(t.respuesta)}</div>` : ''}
+                    ${t.asignado ? `<div><strong>Asignado a:</strong> ${esc(t.asignado)}</div>` : ''}
+                    ${t.aprobadoPor ? `<div><strong>Aprobado por:</strong> ${esc(t.aprobadoPor)}</div>` : ''}
+                    ${t.completadoPor ? `<div><strong>Completado por:</strong> ${esc(t.completadoPor)}</div>` : ''}
+                </div>
+            `;
+
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('pageDetail').classList.add('active');
+
+            // Guardar para volver
+            window._detailFrom = from || 'staff';
+        }
+
+        function goBack() {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            if (window._detailFrom === 'trabajador') {
+                document.getElementById('pageTrabajador').classList.add('active');
+                renderTrabajador();
+            } else {
+                document.getElementById('pageStaff').classList.add('active');
+                renderStaff();
+            }
+        }
+
+        function goHome() {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.getElementById('pageHome').classList.add('active');
+            document.getElementById('userInfo').style.display = 'none';
+            document.getElementById('btnStaff').style.display = 'block';
+            document.getElementById('btnStaff').classList.remove('active');
+            viewMode = 'home';
+            if (!isAuth) renderMisTickets();
+        }
+
+        // ============================================================
+        // INICIO
+        // ============================================================
+        document.getElementById('loading').style.display = 'none';
+        loadHomeTickets();
+    </script>
+
+</body>
+</html>
