@@ -35,6 +35,7 @@
             --danger-bg: #fef2f2;
             --radius: 12px;
             --radius-sm: 8px;
+            --radius-lg: 16px;
             --shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.03);
             --shadow-lg: 0 8px 40px rgba(0, 0, 0, 0.06);
             --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -82,9 +83,7 @@
             animation: spin 0.7s linear infinite;
         }
         @keyframes spin {
-            to {
-                transform: rotate(360deg);
-            }
+            to { transform: rotate(360deg); }
         }
         #loading .title {
             font-size: 20px;
@@ -353,7 +352,6 @@
         .btn-danger:hover:not(:disabled) {
             background: #b91c1c;
         }
-
         .btn-secondary {
             background: transparent;
             color: var(--text-secondary);
@@ -362,7 +360,6 @@
         .btn-secondary:hover {
             background: var(--bg);
         }
-
         .btn-sm {
             padding: 5px 12px;
             font-size: 11px;
@@ -519,6 +516,128 @@
             margin-top: 4px;
         }
 
+        /* ===== PEDIDOS ===== */
+        .pedido {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-left: 3px solid var(--warning);
+            border-radius: var(--radius-sm);
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            transition: 0.15s;
+        }
+        .pedido:last-child {
+            margin-bottom: 0;
+        }
+        .pedido.autorizado {
+            border-left-color: var(--success);
+            background: var(--success-bg);
+        }
+        .pedido.rechazado {
+            border-left-color: var(--danger);
+            background: var(--danger-bg);
+        }
+        .pedido .head {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+        .pedido .id {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-light);
+        }
+        .pedido .status {
+            font-size: 10px;
+            font-weight: 600;
+            padding: 2px 12px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        .pedido .status.pendiente {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+        .pedido .status.autorizado {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+        .pedido .status.rechazado {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+        .pedido .titulo {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        .pedido .desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+        .pedido .meta {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 6px;
+        }
+        .pedido .meta span {
+            font-size: 11px;
+            color: var(--text-secondary);
+            background: var(--bg);
+            padding: 2px 10px;
+            border-radius: 20px;
+        }
+        .pedido .meta .urgente {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+        .pedido .actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 10px;
+        }
+        .pedido .actions button {
+            flex: 1;
+            padding: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            transition: 0.15s;
+        }
+        .pedido .actions .btn-autorizar {
+            background: var(--success);
+            color: #fff;
+        }
+        .pedido .actions .btn-autorizar:hover {
+            background: #15803d;
+        }
+        .pedido .actions .btn-rechazar {
+            background: var(--danger);
+            color: #fff;
+        }
+        .pedido .actions .btn-rechazar:hover {
+            background: #b91c1c;
+        }
+        .pedido .comentario {
+            margin-top: 8px;
+            padding: 10px;
+            background: var(--bg);
+            border-radius: 6px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        .pedido .comentario strong {
+            color: var(--text);
+        }
+
         /* ===== STATS ===== */
         .stats {
             display: grid;
@@ -544,6 +663,9 @@
         }
         .stats .item .num.success {
             color: var(--success);
+        }
+        .stats .item .num.accent {
+            color: var(--accent);
         }
         .stats .item .lbl {
             font-size: 9px;
@@ -820,6 +942,7 @@
                     <input type="email" id="regEmail" placeholder="Email" />
                     <input type="password" id="regPassword" placeholder="Contraseña (mínimo 6 caracteres)" />
                     <select id="regRole">
+                        <option value="gerencia">Gerencia</option>
                         <option value="encargado_general">Encargado General</option>
                         <option value="tecnico">Técnico</option>
                         <option value="mucama">Mucama</option>
@@ -935,6 +1058,75 @@
                     </div>
                 </div>
 
+                <!-- PAGE: GERENCIA -->
+                <div class="page" id="pageGerencia">
+                    <div class="card">
+                        <div class="card-title">Panel de gerencia</div>
+                        <div class="stats">
+                            <div class="item">
+                                <div class="num warning" id="gPretickets">0</div>
+                                <div class="lbl">Pretickets</div>
+                            </div>
+                            <div class="item">
+                                <div class="num danger" id="gPendientes">0</div>
+                                <div class="lbl">Pendientes</div>
+                            </div>
+                            <div class="item">
+                                <div class="num success" id="gCompletados">0</div>
+                                <div class="lbl">Completados</div>
+                            </div>
+                        </div>
+                        <div class="stats" style="margin-top:6px;">
+                            <div class="item">
+                                <div class="num accent" id="gPedidosPend">0</div>
+                                <div class="lbl">Pedidos</div>
+                            </div>
+                            <div class="item">
+                                <div class="num success" id="gPedidosAut">0</div>
+                                <div class="lbl">Autorizados</div>
+                            </div>
+                            <div class="item">
+                                <div class="num danger" id="gPedidosRech">0</div>
+                                <div class="lbl">Rechazados</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">Pedidos de encargados</div>
+                        <div class="filters">
+                            <button class="active" onclick="filterPedidos('todos', this)">Todos</button>
+                            <button onclick="filterPedidos('pendiente', this)">Pendientes</button>
+                            <button onclick="filterPedidos('autorizado', this)">Autorizados</button>
+                            <button onclick="filterPedidos('rechazado', this)">Rechazados</button>
+                        </div>
+                        <div id="pedidosContainer">
+                            <div class="empty">
+                                <div class="icon">📦</div>
+                                <div class="title">Cargando pedidos...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">Todos los tickets</div>
+                        <div class="filters">
+                            <button class="active" onclick="filterTicketsGer('all', this)">Todos</button>
+                            <button onclick="filterTicketsGer('pendiente', this)">Pendientes</button>
+                            <button onclick="filterTicketsGer('enprogreso', this)">En curso</button>
+                            <button onclick="filterTicketsGer('completado', this)">Completados</button>
+                        </div>
+                        <div id="gerTicketsContainer">
+                            <div class="empty">
+                                <div class="icon">📭</div>
+                                <div class="title">Cargando tickets...</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-secondary" onclick="goHome()">← Volver al inicio</button>
+                </div>
+
                 <!-- PAGE: STAFF (Encargado General) -->
                 <div class="page" id="pageStaff">
                     <div class="card">
@@ -951,6 +1143,20 @@
                             <div class="item">
                                 <div class="num success" id="sCompletados">0</div>
                                 <div class="lbl">Completados</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-title">
+                            Pedidos a gerencia
+                            <button class="btn-sm btn-primary" style="margin-left:auto;padding:4px 10px;font-size:11px;" onclick="openNuevoPedido()">+ Nuevo pedido</button>
+                        </div>
+                        <div id="misPedidosContainer">
+                            <div class="empty">
+                                <div class="icon">📦</div>
+                                <div class="title">Sin pedidos</div>
+                                <div class="sub">Solicitá insumos a gerencia</div>
                             </div>
                         </div>
                     </div>
@@ -1006,6 +1212,45 @@
         </div>
     </div>
 
+    <!-- MODAL NUEVO PEDIDO -->
+    <div id="nuevoPedidoModal" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px;">
+        <div style="background: #fff; border-radius: 16px; padding: 32px 24px; max-width: 360px; width: 100%; box-shadow: var(--shadow-lg); position: relative;">
+            <button class="close" style="position: absolute; top: 14px; right: 18px; background: none; border: none; color: var(--text-light); font-size: 18px; cursor: pointer;" onclick="closeNuevoPedido()">✕</button>
+            <div style="font-size: 20px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px;">Nuevo pedido</div>
+            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 20px;">Solicitá insumos a gerencia</div>
+
+            <div class="field">
+                <label>Título <span class="req">*</span></label>
+                <input type="text" id="pedidoTitulo" placeholder="Ej: Productos de limpieza" />
+            </div>
+
+            <div class="field">
+                <label>Categoría <span class="req">*</span></label>
+                <select id="pedidoCategoria">
+                    <option value="limpieza">Limpieza</option>
+                    <option value="mantenimiento">Mantenimiento</option>
+                    <option value="papeleria">Papelería</option>
+                    <option value="otros">Otros</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Urgencia</label>
+                <select id="pedidoUrgencia">
+                    <option value="normal">Normal</option>
+                    <option value="urgente">Urgente</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label>Detalle <span class="req">*</span></label>
+                <textarea id="pedidoDesc" placeholder="Cantidades, marcas, etc."></textarea>
+            </div>
+
+            <button class="btn btn-primary" id="btnCrearPedido" onclick="crearPedido()">Enviar pedido</button>
+        </div>
+    </div>
+
     <!-- TOAST -->
     <div class="toast" id="toast"></div>
 
@@ -1028,10 +1273,14 @@
         let currentUser = null;
         let currentRole = null;
         let allTickets = [];
+        let allPedidos = [];
         let unsub = null;
+        let unsubPedidos = null;
         let filter = 'all';
+        let filterGer = 'all';
+        let filterPed = 'todos';
         let isAuth = false;
-        let viewMode = 'home'; // home | staff | trabajador
+        let viewMode = 'home';
 
         try {
             const app = firebase.initializeApp(firebaseConfig);
@@ -1136,8 +1385,8 @@
         }
 
         function handleLogout() {
-            if (unsub) { unsub();
-                unsub = null; }
+            if (unsub) { unsub(); unsub = null; }
+            if (unsubPedidos) { unsubPedidos(); unsubPedidos = null; }
             auth.signOut();
             isAuth = false;
             currentUser = null;
@@ -1173,6 +1422,7 @@
                         document.getElementById('userAvatar').textContent = (currentUser.name || 'U')[0];
 
                         const roles = {
+                            gerencia: 'Gerencia',
                             encargado_general: 'Encargado',
                             tecnico: 'Técnico',
                             mucama: 'Mucama'
@@ -1182,7 +1432,10 @@
                         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
 
                         // Mostrar página según rol
-                        if (currentRole === 'encargado_general') {
+                        if (currentRole === 'gerencia') {
+                            document.getElementById('pageGerencia').classList.add('active');
+                            viewMode = 'gerencia';
+                        } else if (currentRole === 'encargado_general') {
                             document.getElementById('pageStaff').classList.add('active');
                             viewMode = 'staff';
                         } else if (currentRole === 'tecnico' || currentRole === 'mucama') {
@@ -1190,17 +1443,31 @@
                             viewMode = 'trabajador';
                         }
 
-                        if (unsub) { unsub();
-                            unsub = null; }
+                        if (unsub) { unsub(); unsub = null; }
                         unsub = db.collection('tickets')
                             .orderBy('createdAt', 'desc')
                             .onSnapshot(snap => {
                                 allTickets = [];
                                 snap.forEach(d => allTickets.push({ id: d.id, ...d.data() }));
-                                if (currentRole === 'encargado_general') {
+                                if (currentRole === 'gerencia') {
+                                    renderGerencia();
+                                } else if (currentRole === 'encargado_general') {
                                     renderStaff();
                                 } else if (currentRole === 'tecnico' || currentRole === 'mucama') {
                                     renderTrabajador();
+                                }
+                            });
+
+                        if (unsubPedidos) { unsubPedidos(); unsubPedidos = null; }
+                        unsubPedidos = db.collection('pedidos')
+                            .orderBy('createdAt', 'desc')
+                            .onSnapshot(snap => {
+                                allPedidos = [];
+                                snap.forEach(d => allPedidos.push({ id: d.id, ...d.data() }));
+                                if (currentRole === 'gerencia') {
+                                    renderPedidosGerencia();
+                                } else if (currentRole === 'encargado_general') {
+                                    renderMisPedidos();
                                 }
                             });
 
@@ -1227,8 +1494,7 @@
         // HOME - PRETICKETS
         // ============================================================
         function loadHomeTickets() {
-            if (unsub) { unsub();
-                unsub = null; }
+            if (unsub) { unsub(); unsub = null; }
             unsub = db.collection('tickets')
                 .orderBy('createdAt', 'desc')
                 .onSnapshot(snap => {
@@ -1356,11 +1622,177 @@
         document.getElementById('ticketLegajo')?.addEventListener('input', renderMisTickets);
 
         // ============================================================
+        // GERENCIA
+        // ============================================================
+        function filterTicketsGer(f, btn) {
+            filterGer = f;
+            document.querySelectorAll('#pageGerencia .filters button').forEach(b => {
+                if (b.textContent.toLowerCase().includes('todos') || 
+                    b.textContent.toLowerCase().includes('pendiente') ||
+                    b.textContent.toLowerCase().includes('curso') ||
+                    b.textContent.toLowerCase().includes('completado')) {
+                    if (b.parentElement.parentElement.querySelector('div[id="gerTicketsContainer"]')) {
+                        b.classList.remove('active');
+                    }
+                }
+            });
+            // Fallback: solo remover del contenedor de tickets de gerencia
+            const gerFilters = document.querySelectorAll('#pageGerencia .card:nth-of-type(3) .filters button');
+            gerFilters.forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            renderGerencia();
+        }
+
+        function filterPedidos(f, btn) {
+            filterPed = f;
+            const pedFilters = document.querySelectorAll('#pageGerencia .card:nth-of-type(2) .filters button');
+            pedFilters.forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+            renderPedidosGerencia();
+        }
+
+        function renderGerencia() {
+            // Stats
+            const pretickets = allTickets.filter(t => t.estado === 'pendiente_aprobacion').length;
+            const pendientes = allTickets.filter(t => t.estado === 'pendiente').length;
+            const completados = allTickets.filter(t => t.estado === 'completado').length;
+            const pedidosPend = allPedidos.filter(p => p.estado === 'pendiente').length;
+            const pedidosAut = allPedidos.filter(p => p.estado === 'autorizado').length;
+            const pedidosRech = allPedidos.filter(p => p.estado === 'rechazado').length;
+
+            document.getElementById('gPretickets').textContent = pretickets;
+            document.getElementById('gPendientes').textContent = pendientes;
+            document.getElementById('gCompletados').textContent = completados;
+            document.getElementById('gPedidosPend').textContent = pedidosPend;
+            document.getElementById('gPedidosAut').textContent = pedidosAut;
+            document.getElementById('gPedidosRech').textContent = pedidosRech;
+
+            // Tickets
+            const container = document.getElementById('gerTicketsContainer');
+            let tickets = allTickets;
+            if (filterGer !== 'all') {
+                tickets = tickets.filter(t => t.estado === filterGer);
+            }
+
+            if (tickets.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        <div class="icon">📭</div>
+                        <div class="title">No hay tickets</div>
+                    </div>
+                `;
+            } else {
+                const estados = {
+                    pendiente_aprobacion: '⏳ Preticket',
+                    pendiente: 'Pendiente',
+                    enprogreso: 'En curso',
+                    completado: 'Completado'
+                };
+                const urgencias = { urgente: 'Alta', media: 'Media', baja: 'Baja' };
+                const tipos = { limpieza: 'Limpieza', mantenimiento: 'Mantenimiento', electricidad: 'Electricidad',
+                    plomeria: 'Plomería', otros: 'Otros' };
+
+                container.innerHTML = tickets.map(t => `
+                    <div class="ticket">
+                        <div class="head">
+                            <span class="id">#${esc(t.id.slice(0,8))}</span>
+                            <span class="status ${t.estado}">${estados[t.estado] || t.estado}</span>
+                        </div>
+                        <div style="font-size:12px;color:var(--text-secondary);margin-bottom:2px;">
+                            ${esc(t.nombre)} · Legajo ${esc(t.legajo)}
+                        </div>
+                        <div class="title">${esc(t.descripcion)}</div>
+                        <div class="meta">
+                            <span>${esc(t.ubicacion)}</span>
+                            <span>${tipos[t.tipo] || t.tipo}</span>
+                            <span class="${t.urgencia}">${urgencias[t.urgencia] || t.urgencia}</span>
+                            <span>${esc(t.building)}</span>
+                        </div>
+                        ${t.respuesta ? `<div class="reply-box"><strong>Respuesta:</strong> ${esc(t.respuesta)}</div>` : ''}
+                        ${t.asignado ? `<div class="assigned">Asignado a: ${esc(t.asignado)}</div>` : ''}
+                        <div class="actions">
+                            <button class="view" onclick="viewDetail('${t.id}', 'gerencia')">Ver</button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        }
+
+        function renderPedidosGerencia() {
+            const container = document.getElementById('pedidosContainer');
+            let pedidos = allPedidos;
+            if (filterPed !== 'todos') {
+                pedidos = pedidos.filter(p => p.estado === filterPed);
+            }
+
+            if (pedidos.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        <div class="icon">📦</div>
+                        <div class="title">No hay pedidos</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const cats = { limpieza: 'Limpieza', mantenimiento: 'Mantenimiento', papeleria: 'Papelería', otros: 'Otros' };
+            const estadosPed = { pendiente: '⏳ Pendiente', autorizado: '✅ Autorizado', rechazado: '❌ Rechazado' };
+
+            container.innerHTML = pedidos.map(p => `
+                <div class="pedido ${p.estado}">
+                    <div class="head">
+                        <span class="id">#${esc(p.id.slice(0,8))}</span>
+                        <span class="status ${p.estado}">${estadosPed[p.estado] || p.estado}</span>
+                    </div>
+                    <div class="titulo">${esc(p.titulo)}</div>
+                    <div class="desc">${esc(p.descripcion)}</div>
+                    <div class="meta">
+                        <span>${esc(p.solicitadoPor)}</span>
+                        <span>${cats[p.categoria] || p.categoria}</span>
+                        <span class="${p.urgencia === 'urgente' ? 'urgente' : ''}">${p.urgencia === 'urgente' ? 'Urgente' : 'Normal'}</span>
+                    </div>
+                    ${p.estado === 'pendiente' ? `
+                        <div class="actions">
+                            <button class="btn-autorizar" onclick="autorizarPedido('${p.id}', true)">Autorizar</button>
+                            <button class="btn-rechazar" onclick="autorizarPedido('${p.id}', false)">Rechazar</button>
+                        </div>
+                    ` : `
+                        ${p.comentarioGerencia ? `
+                            <div class="comentario">
+                                <strong>Comentario:</strong> ${esc(p.comentarioGerencia)}
+                            </div>
+                        ` : ''}
+                        ${p.autorizadoPor ? `<div class="assigned" style="margin-top:6px;">Por: ${esc(p.autorizadoPor)}</div>` : ''}
+                    `}
+                </div>
+            `).join('');
+        }
+
+        async function autorizarPedido(pedidoId, autorizar) {
+            const accion = autorizar ? 'autorizar' : 'rechazar';
+            if (!confirm(`¿${accion.charAt(0).toUpperCase() + accion.slice(1)} este pedido?`)) return;
+
+            let comentario = prompt('Comentario (opcional):') || '';
+
+            try {
+                await db.collection('pedidos').doc(pedidoId).update({
+                    estado: autorizar ? 'autorizado' : 'rechazado',
+                    autorizadoPor: currentUser.name,
+                    comentarioGerencia: comentario,
+                    fechaAutorizacion: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                toast(autorizar ? '✅ Pedido autorizado' : '❌ Pedido rechazado', 'success');
+            } catch (e) {
+                toast('Error: ' + e.message, 'error');
+            }
+        }
+
+        // ============================================================
         // STAFF (ENCARGADO GENERAL)
         // ============================================================
         function filterTickets(f, btn) {
             filter = f;
-            document.querySelectorAll('.filters button').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('#pageStaff .filters button').forEach(b => b.classList.remove('active'));
             if (btn) btn.classList.add('active');
             renderStaff();
         }
@@ -1434,12 +1866,102 @@
         }
 
         // ============================================================
+        // MIS PEDIDOS (Encargado)
+        // ============================================================
+        function renderMisPedidos() {
+            const container = document.getElementById('misPedidosContainer');
+            const misPedidos = allPedidos.filter(p => p.solicitadoPorUid === currentUser?.uid);
+
+            if (misPedidos.length === 0) {
+                container.innerHTML = `
+                    <div class="empty">
+                        <div class="icon">📦</div>
+                        <div class="title">Sin pedidos</div>
+                        <div class="sub">Solicitá insumos a gerencia</div>
+                    </div>
+                `;
+                return;
+            }
+
+            const cats = { limpieza: 'Limpieza', mantenimiento: 'Mantenimiento', papeleria: 'Papelería', otros: 'Otros' };
+            const estadosPed = { pendiente: '⏳ Pendiente', autorizado: '✅ Autorizado', rechazado: '❌ Rechazado' };
+
+            container.innerHTML = misPedidos.map(p => `
+                <div class="pedido ${p.estado}">
+                    <div class="head">
+                        <span class="id">#${esc(p.id.slice(0,8))}</span>
+                        <span class="status ${p.estado}">${estadosPed[p.estado] || p.estado}</span>
+                    </div>
+                    <div class="titulo">${esc(p.titulo)}</div>
+                    <div class="desc">${esc(p.descripcion)}</div>
+                    <div class="meta">
+                        <span>${cats[p.categoria] || p.categoria}</span>
+                        <span class="${p.urgencia === 'urgente' ? 'urgente' : ''}">${p.urgencia === 'urgente' ? 'Urgente' : 'Normal'}</span>
+                    </div>
+                    ${p.comentarioGerencia ? `
+                        <div class="comentario">
+                            <strong>Gerencia:</strong> ${esc(p.comentarioGerencia)}
+                        </div>
+                    ` : ''}
+                </div>
+            `).join('');
+        }
+
+        function openNuevoPedido() {
+            document.getElementById('nuevoPedidoModal').style.display = 'flex';
+        }
+
+        function closeNuevoPedido() {
+            document.getElementById('nuevoPedidoModal').style.display = 'none';
+            document.getElementById('pedidoTitulo').value = '';
+            document.getElementById('pedidoDesc').value = '';
+        }
+
+        async function crearPedido() {
+            const titulo = document.getElementById('pedidoTitulo').value.trim();
+            const categoria = document.getElementById('pedidoCategoria').value;
+            const urgencia = document.getElementById('pedidoUrgencia').value;
+            const desc = document.getElementById('pedidoDesc').value.trim();
+
+            if (!titulo || !desc) {
+                toast('Completá título y detalle', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('btnCrearPedido');
+            btn.disabled = true;
+            btn.textContent = '⏳';
+
+            try {
+                await db.collection('pedidos').add({
+                    titulo: titulo,
+                    categoria: categoria,
+                    urgencia: urgencia,
+                    descripcion: desc,
+                    estado: 'pendiente',
+                    solicitadoPor: currentUser.name,
+                    solicitadoPorUid: currentUser.uid,
+                    autorizadoPor: '',
+                    comentarioGerencia: '',
+                    fechaAutorizacion: null,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                toast('✅ Pedido enviado a gerencia', 'success');
+                closeNuevoPedido();
+            } catch (e) {
+                toast('Error: ' + e.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Enviar pedido';
+            }
+        }
+
+        // ============================================================
         // TRABAJADOR (Técnico / Mucama)
         // ============================================================
         function renderTrabajador() {
             const container = document.getElementById('trabajadorContainer');
 
-            // Filtrar tickets asignados a este usuario
             const misTickets = allTickets.filter(t =>
                 t.asignado === currentUser.name ||
                 t.asignadoUid === currentUser.uid
@@ -1515,7 +2037,6 @@
         }
 
         async function assignTicket(id) {
-            // Obtener lista de técnicos y mucamas
             const usuariosSnapshot = await db.collection('usuarios').where('role', 'in', ['tecnico', 'mucama']).get();
             const usuarios = [];
             usuariosSnapshot.forEach(d => usuarios.push({ id: d.id, ...d.data() }));
@@ -1633,7 +2154,6 @@
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
             document.getElementById('pageDetail').classList.add('active');
 
-            // Guardar para volver
             window._detailFrom = from || 'staff';
         }
 
@@ -1642,6 +2162,10 @@
             if (window._detailFrom === 'trabajador') {
                 document.getElementById('pageTrabajador').classList.add('active');
                 renderTrabajador();
+            } else if (window._detailFrom === 'gerencia') {
+                document.getElementById('pageGerencia').classList.add('active');
+                renderGerencia();
+                renderPedidosGerencia();
             } else {
                 document.getElementById('pageStaff').classList.add('active');
                 renderStaff();
